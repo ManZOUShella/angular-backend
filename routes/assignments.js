@@ -1,14 +1,22 @@
 let Assignment = require('../model/assignment');
 
-// Récupérer tous les assignments (GET)
+// Récupérer tous les assignments avec pagination (GET)
 exports.getAssignments = (req, res) => {
-    Assignment.find((err, assignments) => {
-        if (err) {
-            res.send(err);
-        } else {
-            res.send(assignments);
-        }
-    });
+    const page = parseInt(req.query.page) || 1;   // 默认为第 1 页
+    const limit = parseInt(req.query.limit) || 10; // 每页默认显示 10 个
+
+    // 创建一个聚合查询
+    let aggregateQuery = Assignment.aggregate();
+
+    // 使用 aggregatePaginate 进行分页
+    Assignment.aggregatePaginate(aggregateQuery, { page, limit })
+        .then(result => {
+            res.status(200).json(result);
+        })
+        .catch(err => {
+            console.error('Pagination error:', err);
+            res.status(500).send(err);
+        });
 };
 
 // Récupérer un assignment par son id (GET)
